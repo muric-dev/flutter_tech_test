@@ -1,12 +1,15 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:cabina/common/theme/app_theme.dart';
 import 'package:cabina/common/widgets/status_views.dart';
+import 'package:cabina/discover/models/podcast.dart';
 import 'package:cabina/library/cubit/library_cubit.dart';
 import 'package:cabina/library/models/subscribed_podcast.dart';
 import 'package:cabina/library/views/library_page.dart';
+import 'package:cabina/show_detail/views/show_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockLibraryCubit extends MockCubit<LibraryState>
@@ -17,6 +20,14 @@ void main() {
     id: 1,
     title: 'Reply All',
     author: 'Gimlet',
+  );
+
+  const withFeed = SubscribedPodcast(
+    id: 2,
+    title: 'Serial',
+    author: 'This American Life',
+    feedUrl: 'https://example.com/serial.xml',
+    artworkUrl: 'http://serial.png',
   );
 
   late _MockLibraryCubit cubit;
@@ -37,6 +48,39 @@ void main() {
       ),
     ),
   );
+
+  /// Pumps the page under a real [GoRouter] whose detail route records the
+  /// pushed [Podcast] instead of building [ShowDetailPage].
+  Future<List<Podcast>> pumpRouted(WidgetTester tester) async {
+    final pushed = <Podcast>[];
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => BlocProvider<LibraryCubit>.value(
+            value: cubit,
+            child: const LibraryPage(),
+          ),
+        ),
+        GoRoute(
+          path: ShowDetailPage.routePath,
+          name: ShowDetailPage.routeName,
+          builder: (_, state) {
+            pushed.add(state.extra! as Podcast);
+            return const SizedBox();
+          },
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme(isDark: false).toThemeData(),
+        routerConfig: router,
+      ),
+    );
+    return pushed;
+  }
 
   group('LibraryPage', () {
     testWidgets('WHEN pumped '
@@ -109,6 +153,46 @@ void main() {
       await tester.tap(find.byTooltip('Unsubscribe'));
 
       verify(() => cubit.unsubscribe(podcast.id)).called(1);
+    });
+
+    testWidgets('GIVEN an item with feedUrl '
+        'WHEN it is tapped '
+        'THEN the detail is pushed with it', (tester) async {
+      when(() => cubit.state).thenReturn(
+        const LibraryState(status: LibraryStatus.ready, podcasts: [withFeed]),
+      );
+
+      final pushed = await pumpRouted(tester);
+      await tester.tap(find.text('Serial'));
+      await tester.pumpAndSettle();
+
+      expect(pushed, const [
+        Podcast(
+          id: 2,
+          title: 'Serial',
+          author: 'This American Life',
+          feedUrl: 'https://example.com/serial.xml',
+          artworkUrl: 'http://serial.png',
+        ),
+      ]);
+    });
+
+    testWidgets('GIVEN an item saved without feedUrl '
+        'WHEN it is tapped '
+        'THEN the detail is pushed right away with an empty feedUrl', (
+      tester,
+    ) async {
+      when(() => cubit.state).thenReturn(
+        const LibraryState(status: LibraryStatus.ready, podcasts: [podcast]),
+      );
+
+      final pushed = await pumpRouted(tester);
+      await tester.tap(find.text('Reply All'));
+      await tester.pumpAndSettle();
+
+      expect(pushed, const [
+        Podcast(id: 1, title: 'Reply All', author: 'Gimlet', feedUrl: ''),
+      ]);
     });
 
     testWidgets('GIVEN ready '

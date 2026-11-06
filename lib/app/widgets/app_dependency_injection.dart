@@ -51,6 +51,7 @@ class AppDependencyInjection extends StatelessWidget {
           create: (ctx) => ShowDetailRepository(
             feedService: ctx.read<RssFeedService>(),
             feedParser: const RssFeedParser(),
+            searchService: ctx.read<ItunesSearchService>(),
           ),
         ),
         RepositoryProvider(

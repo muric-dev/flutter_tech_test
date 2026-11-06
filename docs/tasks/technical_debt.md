@@ -16,7 +16,7 @@ Source of truth for known issues. One line each, `file:line` when it helps.
 
 ## Library
 - ✅ Subscribing a new podcast and going back, library is not updated. `LibraryPage` loads once inside the `IndexedStack` → one app-scoped `LibraryCubit` shared by the tab and `SubscribeButton`
-- ❌ Library item tap doesn't open the podcast detail 
+- ✅ Library item tap doesn't open the podcast detail → `LibraryPage` pushes `ShowDetailPage` right away; for migrated entries without `feedUrl`, `ShowDetailRepository` looks it up through `lookupById`
 - ✅ Singleton `LibraryStore` on raw prefs, no repository or cubit, flat folder → `LibraryCubit` → `LibraryRepository` → `LocalStorage`, feature anatomy
 - ❌ `SubscribeButton` lives in library, only `show_detail` renders it
 - ✅ Subscriptions saved as `id|title|author|artwork`: a corrupt entry broke the tab, and a title or author with `|` or `;` split wrong on the next load → JSON under `library_podcasts`, the old key migrated once and then deleted, bad entries skipped
@@ -48,7 +48,7 @@ Source of truth for known issues. One line each, `file:line` when it helps.
 - ✅ iTunes duration badly parsed (`hh:mm`, `mm`) → `ItunesDurationParser`
 - ❌ Named time zones other than UTC (`EST`, `PDT`) rejected → episode without date, sorted last
 - ❌ `artworkUrl` checks null, never empty or invalid URLs
-- ❌ `Podcast`, `Episode` and `PodcastDetail` leave fields out of `props`
+- 🟡 `Podcast`, `Episode` and `PodcastDetail` leave fields out of `props` → `PodcastDetail` fixed; `Podcast` and `Episode` still open
 - ❌ `.g.dart` kept. Removing it means hand-writing `Podcast.fromJson`, its own refactor
 
 ## Errors
@@ -73,7 +73,7 @@ Source of truth for known issues. One line each, `file:line` when it helps.
 - 🟡 Missing docs across the app. New classes documented, many old ones still without `///`
 - 🟡 Wildcards for unused params. `PosterImage` done, DI and pages still use `ctx`/`context`
 - ❌ Private named params (`required this._repository`) not adopted
-- 🟡 Dead code. `hive` and `cupertino_icons` removed. `DiscoverRepository.search`, `ApiClient.dispose`, `PlayerPosition.progress`, `ApiException.isRateLimited` and `ItunesSearchService.lookupById` still unused
+- 🟡 Dead code. `hive` and `cupertino_icons` removed. `DiscoverRepository.search`, `ApiClient.dispose`, `PlayerPosition.progress` and `ApiException.isRateLimited` still unused
 - ❌ Bloc and cubit tests at the feature root, not under `bloc/` or `cubit/`
 - ❌ Hardcoded colors outside the theme: `show_card.dart:46,50`, `player_controls.dart:77`
 - ❌ `uuid` declared but unused, for an upcoming feature. Don't remove

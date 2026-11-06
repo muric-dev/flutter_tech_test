@@ -148,6 +148,22 @@ void main() {
       );
 
       test(
+        'GIVEN only a result with an empty feedUrl '
+        'WHEN lookupById '
+        'THEN throws ApiException instead of returning it',
+        () async {
+          await expectLater(
+            buildService(
+              resultsBody([
+                {...jsonOf(replyAll), 'feedUrl': ''},
+              ]),
+            ).lookupById(2),
+            throwsApiException('Podcast not found'),
+          );
+        },
+      );
+
+      test(
         'GIVEN no results '
         'WHEN lookupById '
         'THEN throws ApiException',

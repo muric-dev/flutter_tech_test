@@ -45,6 +45,7 @@ class RssFeedParser {
       podcastId: podcast.id,
       title: podcast.title,
       author: podcast.author,
+      feedUrl: podcast.feedUrl,
       artworkUrl: podcast.artworkUrl,
       descriptionHtml: description,
       episodes: episodes,

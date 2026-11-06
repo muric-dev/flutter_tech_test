@@ -29,10 +29,14 @@ class ItunesSearchService {
     ).where(_hasFeedUrl).map(_tryParse).nonNulls.toList();
   }
 
-  Future<Podcast?> lookupById(int collectionId) async {
+  /// The podcast with [collectionId]. Throws [ApiException] when iTunes has no
+  /// valid result with a feed URL for it.
+  Future<Podcast> lookupById(int collectionId) async {
     final uri = Uri.https(_host, '/lookup', {'id': '$collectionId'});
     final body = await _apiClient.getString(uri);
-    final podcast = _decodeResults(body).map(_tryParse).nonNulls.firstOrNull;
+    final podcast = _decodeResults(
+      body,
+    ).where(_hasFeedUrl).map(_tryParse).nonNulls.firstOrNull;
     if (podcast == null) throw const ApiException('Podcast not found');
     return podcast;
   }

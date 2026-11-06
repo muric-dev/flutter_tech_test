@@ -3,12 +3,17 @@ import 'dart:async';
 import 'package:cabina/common/theme/app_theme.dart';
 import 'package:cabina/common/widgets/poster_image.dart';
 import 'package:cabina/common/widgets/status_views.dart';
+import 'package:cabina/discover/models/podcast.dart';
 import 'package:cabina/library/cubit/library_cubit.dart';
+import 'package:cabina/library/models/subscribed_podcast.dart';
+import 'package:cabina/show_detail/views/show_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// The Library tab: the subscribed shows, oldest first. Loads the app-scoped
-/// [LibraryCubit] and shows its write errors as a SnackBar.
+/// [LibraryCubit], opens a show's detail on tap and shows the cubit's write
+/// errors as a SnackBar.
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
 
@@ -22,6 +27,21 @@ class _LibraryPageState extends State<LibraryPage> {
     super.initState();
     unawaited(context.read<LibraryCubit>().load());
   }
+
+  /// Opens [item]'s detail. A subscription saved before feeds were stored
+  /// goes with an empty feed URL, and the detail looks it up.
+  void _open(SubscribedPodcast item) => unawaited(
+    context.pushNamed(
+      ShowDetailPage.routeName,
+      extra: Podcast(
+        id: item.id,
+        title: item.title,
+        author: item.author,
+        feedUrl: item.feedUrl ?? '',
+        artworkUrl: item.artworkUrl,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +94,10 @@ class _LibraryPageState extends State<LibraryPage> {
                     trailing: IconButton(
                       icon: const Icon(Icons.remove_circle_outline),
                       tooltip: 'Unsubscribe',
-                      onPressed: () => context.read<LibraryCubit>().unsubscribe(
-                        item.id,
-                      ),
+                      onPressed: () =>
+                          context.read<LibraryCubit>().unsubscribe(item.id),
                     ),
+                    onTap: () => _open(item),
                   );
                 },
               );

@@ -1,5 +1,6 @@
 part of 'library_cubit.dart';
 
+/// Where the library's load is. Writes happen only while `ready`.
 enum LibraryStatus { initial, loading, ready, error }
 
 /// The user's subscriptions. `error` always carries [errorMessage]. While

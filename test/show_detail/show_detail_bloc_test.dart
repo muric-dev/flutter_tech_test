@@ -22,6 +22,7 @@ void main() {
     podcastId: 1,
     title: 'Historias del mas aca',
     author: 'Leyendas Legendarias',
+    feedUrl: 'https://example.com/feed.xml',
     episodes: [],
   );
 

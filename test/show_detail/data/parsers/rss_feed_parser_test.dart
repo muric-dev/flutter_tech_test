@@ -62,6 +62,7 @@ void main() {
       expect(detail.podcastId, podcast.id);
       expect(detail.title, podcast.title);
       expect(detail.author, podcast.author);
+      expect(detail.feedUrl, podcast.feedUrl);
       expect(
         detail.descriptionHtml,
         'Un podcast de comedia donde cada semana exploramos...',

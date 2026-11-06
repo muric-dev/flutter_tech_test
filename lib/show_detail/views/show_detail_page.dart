@@ -65,10 +65,7 @@ class _ShowDetailPageState extends State<ShowDetailPage> {
                 ),
               );
             case ShowDetailStatus.ready:
-              return _DetailContent(
-                detail: state.detail!,
-                podcast: widget.podcast,
-              );
+              return _DetailContent(detail: state.detail!);
           }
         },
       ),
@@ -77,10 +74,9 @@ class _ShowDetailPageState extends State<ShowDetailPage> {
 }
 
 class _DetailContent extends StatelessWidget {
-  const _DetailContent({required this.detail, required this.podcast});
+  const _DetailContent({required this.detail});
 
   final PodcastDetail detail;
-  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -115,10 +111,10 @@ class _DetailContent extends StatelessWidget {
                         const SizedBox(height: 12),
                         SubscribeButton(
                           podcast: SubscribedPodcast(
-                            id: podcast.id,
+                            id: detail.podcastId,
                             title: detail.title,
                             author: detail.author,
-                            feedUrl: podcast.feedUrl,
+                            feedUrl: detail.feedUrl,
                             artworkUrl: detail.artworkUrl,
                           ),
                         ),

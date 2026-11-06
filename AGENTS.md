@@ -19,7 +19,7 @@ lib/
     network/       ApiClient: http + timeout, failures mapped to CabinaException
     observers/     AppBlocObserver: logs whatever blocs pass to addError
     parsers/       ItunesDurationParser, Rfc822DateParser
-    services/      ItunesSearchService (shared by discover and search)
+    services/      ItunesSearchService (shared by discover, search and show_detail)
     storage/       LocalStorage: async key/value, failures mapped to StorageException
     theme/         AppTheme (ThemeExtension, context.appTheme), AppColors, AppTextStyles
     widgets/       PosterImage, LoaderView, ErrorView, EmptyView
