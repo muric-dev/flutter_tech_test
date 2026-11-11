@@ -26,6 +26,14 @@ void main() {
       );
     });
 
+    test('AICompanionException offers no retry unless it says so', () {
+      expect(const AICompanionException('not available').canRetry, isFalse);
+      expect(
+        const AICompanionException('no connection', canRetry: true).canRetry,
+        isTrue,
+      );
+    });
+
     test(
       'messageOf returns fallbackMessage for non-CabinaException objects',
       () {

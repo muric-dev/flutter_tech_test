@@ -42,3 +42,16 @@ class CabinaPlayerException extends CabinaException {
 class StorageException extends CabinaException {
   const StorageException(super.message, {super.cause});
 }
+
+/// AI Companion could not prepare an episode. [message] is safe to show:
+/// it never names the provider, the key or a limit.
+class AICompanionException extends CabinaException {
+  const AICompanionException(
+    super.message, {
+    this.canRetry = false,
+    super.cause,
+  });
+
+  /// Whether trying again can succeed, so the sheet offers "Retry".
+  final bool canRetry;
+}

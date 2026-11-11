@@ -32,6 +32,8 @@ class AppDependencyInjection extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
+        RepositoryProvider.value(value: apiClient),
+        RepositoryProvider.value(value: localStorage),
         RepositoryProvider(
           create: (ctx) => ItunesSearchService(apiClient: apiClient),
         ),
