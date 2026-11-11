@@ -43,7 +43,10 @@ lib/<feature>/
                    part file (a bloc adds <feature>_event.dart)
   data/            <feature>_repository.dart
     services/      data sources: network, local storage or an SDK
+    models/        DTOs: a provider's wire shapes (json_serializable), one file per shape. Never
+                   leave data/; parsers map them to the feature's models/
     parsers/       raw payload → model
+    prompts/       what an AI model is asked: instructions and the schema of its answer, as consts
   models/
   views/           <feature>_page.dart
   widgets/

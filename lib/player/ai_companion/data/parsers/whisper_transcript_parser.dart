@@ -1,11 +1,10 @@
 import 'dart:convert';
 
 import 'package:cabina/common/errors/exceptions.dart';
+import 'package:cabina/player/ai_companion/data/models/whisper_response.dart';
 import 'package:cabina/player/ai_companion/models/transcript.dart';
 import 'package:cabina/player/ai_companion/models/transcript_segment.dart';
 import 'package:json_annotation/json_annotation.dart';
-
-part 'whisper_transcript_parser.g.dart';
 
 /// Turns a Whisper `verbose_json` transcription into a [Transcript], without
 /// the silence and music Whisper tends to hallucinate over.
@@ -84,44 +83,4 @@ class WhisperTranscriptParser {
 
   Duration _seconds(double value) =>
       Duration(microseconds: (value * Duration.microsecondsPerSecond).round());
-}
-
-/// The fields AI Companion reads from a Whisper `verbose_json` response.
-@JsonSerializable(createToJson: false, checked: true)
-class WhisperResponse {
-  const WhisperResponse({required this.duration, required this.segments});
-
-  factory WhisperResponse.fromJson(Map<String, dynamic> json) =>
-      _$WhisperResponseFromJson(json);
-
-  /// Seconds of audio.
-  final double duration;
-  final List<WhisperSegment> segments;
-}
-
-/// One segment of a [WhisperResponse], times in seconds.
-@JsonSerializable(
-  createToJson: false,
-  checked: true,
-  fieldRename: FieldRename.snake,
-)
-class WhisperSegment {
-  const WhisperSegment({
-    required this.start,
-    required this.end,
-    required this.text,
-    required this.avgLogprob,
-    required this.compressionRatio,
-    required this.noSpeechProb,
-  });
-
-  factory WhisperSegment.fromJson(Map<String, dynamic> json) =>
-      _$WhisperSegmentFromJson(json);
-
-  final double start;
-  final double end;
-  final String text;
-  final double avgLogprob;
-  final double compressionRatio;
-  final double noSpeechProb;
 }
