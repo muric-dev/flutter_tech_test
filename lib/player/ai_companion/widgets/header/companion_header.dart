@@ -1,27 +1,31 @@
 import 'package:cabina/common/theme/app_theme.dart';
 import 'package:cabina/player/ai_companion/cubit/ai_companion_cubit.dart';
 import 'package:cabina/player/ai_companion/models/episode_companion.dart';
-import 'package:cabina/player/ai_companion/widgets/header/ai_label_chip.dart';
 import 'package:cabina/player/ai_companion/widgets/header/companion_tab_bar.dart';
+import 'package:cabina/player/ai_companion/widgets/header/episode_info_bar.dart';
 import 'package:cabina/player/ai_companion/widgets/header/sheet_handle.dart';
 import 'package:cabina/player/ai_companion/widgets/header/sync_notice.dart';
-import 'package:cabina/player/ai_companion/widgets/player/compact_player_bar.dart';
 import 'package:cabina/player/models/player_args.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// The top of the AI Companion sheet: the handle, or the compact player
-/// when [expanded]; the title with the AI chip; and, once ready, the sync
+/// The top of the AI Companion sheet. At half height: the handle and the
+/// title, with a button that calls [onExpand]. When [expanded]: the
+/// [EpisodeInfoBar], whose button calls [onCollapse]. Once ready, the sync
 /// notice and the tabs.
 class CompanionHeader extends StatelessWidget {
   const CompanionHeader({
     required this.args,
     required this.expanded,
+    required this.onExpand,
+    required this.onCollapse,
     super.key,
   });
 
   final PlayerArgs args;
   final bool expanded;
+  final VoidCallback onExpand;
+  final VoidCallback onCollapse;
 
   @override
   Widget build(BuildContext context) {
@@ -46,34 +50,43 @@ class CompanionHeader extends StatelessWidget {
             ),
           ),
           child: expanded
-              ? CompactPlayerBar(key: const ValueKey('player'), args: args)
-              : const SheetHandle(key: ValueKey('handle')),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-          child: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.primary.withValues(alpha: 0.15),
+              ? EpisodeInfoBar(
+                  key: const ValueKey('episode'),
+                  args: args,
+                  onCollapse: onCollapse,
+                )
+              : Column(
+                  key: const ValueKey('title'),
+                  children: [
+                    const SheetHandle(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            color: theme.primary,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'AI Companion',
+                              style: AppTextStyles.headline.copyWith(
+                                color: theme.foreground,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Full screen',
+                            color: theme.foregroundSoft,
+                            icon: const Icon(Icons.open_in_full),
+                            onPressed: onExpand,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                child: Icon(Icons.auto_awesome, color: theme.primary, size: 16),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'AI Companion',
-                  style: AppTextStyles.headline.copyWith(
-                    color: theme.foreground,
-                  ),
-                ),
-              ),
-              if (companion != null) const AILabelChip(),
-            ],
-          ),
         ),
         if (companion != null) ...[
           SyncNotice(companion: companion),

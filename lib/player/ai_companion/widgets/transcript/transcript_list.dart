@@ -24,7 +24,9 @@ class TranscriptList extends StatefulWidget {
 
 class _TranscriptListState extends State<TranscriptList> {
   /// Where the active sentence sits, as a fraction of the list's height.
-  static const _anchorAlignment = 0.25;
+  /// The same fraction is left empty after the last sentence, so it can
+  /// scroll up to the anchor too.
+  static const _anchorAlignment = 0.125;
 
   final _controller = ScrollController();
   final _centerKey = UniqueKey();
@@ -115,23 +117,30 @@ class _TranscriptListState extends State<TranscriptList> {
       listener: (_, state) => _onActiveChanged(_indexOf(state)),
       child: NotificationListener<ScrollStartNotification>(
         onNotification: _onScrollStart,
-        child: CustomScrollView(
-          controller: _controller,
-          center: _centerKey,
-          anchor: _anchorAlignment,
-          slivers: [
-            // Before the center, slivers grow upwards: item 0 is the
-            // sentence right above the anchor.
-            SliverList.builder(
-              itemCount: _anchor,
-              itemBuilder: (_, index) => _row(_anchor - 1 - index),
-            ),
-            SliverList.builder(
-              key: _centerKey,
-              itemCount: count - _anchor,
-              itemBuilder: (_, index) => _row(_anchor + index),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (_, constraints) => CustomScrollView(
+            controller: _controller,
+            center: _centerKey,
+            anchor: _anchorAlignment,
+            slivers: [
+              // Before the center, slivers grow upwards: item 0 is the
+              // sentence right above the anchor.
+              SliverList.builder(
+                itemCount: _anchor,
+                itemBuilder: (_, index) => _row(_anchor - 1 - index),
+              ),
+              SliverPadding(
+                key: _centerKey,
+                padding: EdgeInsets.only(
+                  bottom: constraints.maxHeight * _anchorAlignment,
+                ),
+                sliver: SliverList.builder(
+                  itemCount: count - _anchor,
+                  itemBuilder: (_, index) => _row(_anchor + index),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
