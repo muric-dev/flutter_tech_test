@@ -49,7 +49,7 @@ lib/<feature>/
     prompts/       what an AI model is asked: instructions and the schema of its answer, as consts
   models/
   views/           <feature>_page.dart
-  widgets/
+  widgets/         one public widget per file; may group by area in subfolders (header/, summary/)
   <sub_feature>/   same anatomy, for a feature that only lives inside its parent's page
 ```
 
