@@ -1,6 +1,7 @@
 import 'package:cabina/common/theme/app_theme.dart';
 import 'package:cabina/common/widgets/poster_image.dart';
 import 'package:cabina/common/widgets/status_views.dart';
+import 'package:cabina/player/ai_companion/widgets/buttons/ai_companion_button.dart';
 import 'package:cabina/player/bloc/player_bloc.dart';
 import 'package:cabina/player/data/services/just_audio_player_service.dart';
 import 'package:cabina/player/models/player_args.dart';
@@ -74,6 +75,8 @@ class _PlayerPageState extends State<PlayerPage> {
                   const SeekBar(),
                   const SizedBox(height: 12),
                   const PlayerControls(),
+                  const SizedBox(height: 16),
+                  AICompanionButton(args: widget.args),
                   const Spacer(),
                 ],
               ),

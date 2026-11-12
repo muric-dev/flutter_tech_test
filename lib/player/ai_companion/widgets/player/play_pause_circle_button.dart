@@ -3,8 +3,8 @@ import 'package:cabina/player/bloc/player_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// The compact player's play/pause: a filled `primary` circle, like the
-/// player's main button but smaller.
+/// The AI Companion footer's play/pause: a filled `primary` circle, the
+/// look of the player's main button.
 class PlayPauseCircleButton extends StatelessWidget {
   const PlayPauseCircleButton({super.key});
 
@@ -21,7 +21,7 @@ class PlayPauseCircleButton extends StatelessWidget {
       style: IconButton.styleFrom(
         backgroundColor: theme.primary,
         foregroundColor: theme.onPrimary,
-        fixedSize: const Size.square(44),
+        fixedSize: const Size.square(56),
       ),
       icon: Icon(icon),
       onPressed: () =>

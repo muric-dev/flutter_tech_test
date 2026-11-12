@@ -132,6 +132,20 @@ void main() {
         verifyNever(() => repository.save(_args, _companion));
       });
 
+      test(
+        'GIVEN a closed cubit '
+        'WHEN start '
+        'THEN completes without emitting or calling the repository',
+        () async {
+          final cubit = buildCubit();
+          await cubit.close();
+
+          await expectLater(cubit.start(), completes);
+
+          verifyZeroInteractions(repository);
+        },
+      );
+
       test('GIVEN the cubit closes during the cache lookup '
           'WHEN no cache is found '
           'THEN the transcript is never requested', () async {
@@ -222,6 +236,21 @@ void main() {
         ],
         errors: () => [isA<AICompanionException>()],
       );
+
+      test('GIVEN start failed and the cubit closed '
+          'WHEN retry '
+          'THEN completes without preparing again', () async {
+        when(() => repository.transcript(_episode)).thenThrow(
+          const AICompanionException("Couldn't prepare AI Companion"),
+        );
+        final cubit = buildCubit();
+        await cubit.start();
+        await cubit.close();
+
+        await expectLater(cubit.retry(), completes);
+
+        verify(() => repository.loadCached(_args)).called(1);
+      });
     });
   });
 }

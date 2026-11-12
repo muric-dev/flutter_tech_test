@@ -9,12 +9,16 @@ import 'package:cabina/player/ai_companion/models/episode_companion.dart';
 import 'package:cabina/player/ai_companion/models/transcript.dart';
 import 'package:cabina/player/ai_companion/models/transcript_segment.dart';
 import 'package:cabina/player/ai_companion/views/ai_companion_sheet.dart';
+import 'package:cabina/player/ai_companion/widgets/companion_footer.dart';
 import 'package:cabina/player/ai_companion/widgets/header/ai_label_chip.dart';
-import 'package:cabina/player/ai_companion/widgets/player/compact_player_bar.dart';
+import 'package:cabina/player/ai_companion/widgets/header/sheet_handle.dart';
+import 'package:cabina/player/ai_companion/widgets/player/play_pause_circle_button.dart';
+import 'package:cabina/player/ai_companion/widgets/transcript/segment_row.dart';
 import 'package:cabina/player/bloc/player_bloc.dart';
 import 'package:cabina/player/models/player_args.dart';
 import 'package:cabina/player/models/player_position.dart';
 import 'package:cabina/player/models/player_status.dart';
+import 'package:cabina/player/widgets/seek_bar.dart';
 import 'package:cabina/show_detail/models/episode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -150,7 +154,7 @@ void main() {
 
     testWidgets(
       'GIVEN loading '
-      'THEN shows LoaderView and no TabBar',
+      'THEN shows LoaderView, no TabBar and no AI chip',
       (tester) async {
         when(() => companionCubit.state).thenReturn(
           const AICompanionState(status: AICompanionStatus.loading),
@@ -160,6 +164,7 @@ void main() {
 
         expect(find.byType(LoaderView), findsOneWidget);
         expect(find.byType(TabBar), findsNothing);
+        expect(find.byType(AILabelChip), findsNothing);
       },
     );
 
@@ -269,25 +274,6 @@ void main() {
     );
 
     testWidgets(
-      'GIVEN the sheet '
-      'WHEN dragged to full height '
-      'THEN shows the compact panel with the title and play/pause',
-      (tester) async {
-        await pumpSheet(tester);
-        expect(find.byType(CompactPlayerBar), findsNothing);
-
-        await tester.drag(find.text('AI Companion'), const Offset(0, -600));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(CompactPlayerBar), findsOneWidget);
-        expect(find.text(_args.episode.title), findsOneWidget);
-        await tester.tap(find.byTooltip('Pause'));
-        verify(
-          () => playerBloc.add(const PlayerPlayPauseToggled()),
-        ).called(1);
-      },
-    );
-    testWidgets(
       'GIVEN show '
       'WHEN the sheet opens '
       'THEN it is a surface card with 24 px top corners',
@@ -357,13 +343,69 @@ void main() {
     );
 
     testWidgets(
-      'GIVEN the sheet at full height '
-      'THEN the compact player shows the podcast title '
-      'and Close pops the sheet',
+      'GIVEN the start of the episode '
+      'WHEN the Transcript tab opens '
+      'THEN the first sentence sits an eighth of the list down',
       (tester) async {
+        await pumpSheet(tester);
+        await tester.tap(find.text('Transcript'));
+        await tester.pumpAndSettle();
+
+        final list = tester.getRect(find.byType(CustomScrollView));
+        final first = tester.getRect(find.byType(SegmentRow).first);
+        expect(first.top - list.top, moreOrLessEquals(list.height * 0.125));
+      },
+    );
+
+    testWidgets(
+      'GIVEN the transcript '
+      'WHEN scrolled to the end '
+      'THEN an eighth of the list is left empty after the last sentence',
+      (tester) async {
+        await pumpSheet(tester);
+        await tester.tap(find.text('Transcript'));
+        await tester.pumpAndSettle();
+
+        await tester.drag(
+          find.byType(CustomScrollView),
+          const Offset(0, -10000),
+        );
+        await tester.pumpAndSettle();
+
+        final list = tester.getRect(find.byType(CustomScrollView));
+        final last = tester.getRect(
+          find.ancestor(
+            of: find.text('Sentence 119 about the lighthouse.'),
+            matching: find.byType(SegmentRow),
+          ),
+        );
+        expect(
+          list.bottom - last.bottom,
+          moreOrLessEquals(list.height * 0.125),
+        );
+      },
+    );
+
+    group('full height', () {
+      /// Opens the sheet through [AICompanionSheet.show], as the player
+      /// does, so Collapse can be told apart from closing the modal.
+      Future<void> openSheet(
+        WidgetTester tester, {
+        bool disableAnimations = false,
+      }) async {
+        tester.view
+          ..physicalSize = const Size(1170, 2532)
+          ..devicePixelRatio = 3;
+        addTearDown(tester.view.reset);
         await tester.pumpWidget(
           MaterialApp(
             theme: AppTheme(isDark: false).toThemeData(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(disableAnimations: disableAnimations),
+              child: child!,
+            ),
             home: MultiBlocProvider(
               providers: [
                 BlocProvider<PlayerBloc>.value(value: playerBloc),
@@ -380,15 +422,167 @@ void main() {
         );
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
+      }
 
+      Future<void> expand(WidgetTester tester) async {
         await tester.drag(find.text('AI Companion'), const Offset(0, -600));
         await tester.pumpAndSettle();
-        expect(find.text(_args.podcastTitle), findsOneWidget);
+      }
 
-        await tester.tap(find.byTooltip('Close'));
-        await tester.pumpAndSettle();
-        expect(find.byType(AICompanionSheet), findsNothing);
-      },
-    );
+      testWidgets(
+        'GIVEN the sheet at half height '
+        'THEN shows the handle, the title with Full screen, '
+        'and only the AI chip at the bottom left, 8 px below the content',
+        (tester) async {
+          await openSheet(tester);
+
+          expect(find.byType(SheetHandle), findsOneWidget);
+          expect(find.text('AI Companion'), findsOneWidget);
+          expect(find.byTooltip('Full screen'), findsOneWidget);
+          final footer = find.byType(CompanionFooter);
+          expect(
+            find.descendant(of: footer, matching: find.byType(AILabelChip)),
+            findsOneWidget,
+          );
+          expect(find.byType(SeekBar), findsNothing);
+          expect(find.byType(PlayPauseCircleButton), findsNothing);
+
+          final sheet = tester.getRect(find.byType(AICompanionSheet));
+          final body = tester.getRect(find.byType(TabBarView));
+          final chip = tester.getRect(find.byType(AILabelChip));
+          expect(chip.left, moreOrLessEquals(sheet.left + 16));
+          // The footer's 4 px top padding plus the chip's 8 px.
+          expect(chip.top, moreOrLessEquals(body.bottom + 12));
+        },
+      );
+
+      testWidgets(
+        'GIVEN the sheet at half height '
+        'WHEN Full screen is tapped '
+        'THEN the sheet goes to full height',
+        (tester) async {
+          await openSheet(tester);
+
+          await tester.tap(find.byTooltip('Full screen'));
+          await tester.pumpAndSettle();
+
+          expect(find.byTooltip('Collapse'), findsOneWidget);
+          expect(find.text(_args.episode.title), findsOneWidget);
+          expect(find.byType(SeekBar), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'GIVEN the sheet at half height and disableAnimations '
+        'WHEN Full screen is tapped '
+        'THEN the sheet is at full height after a single frame',
+        (tester) async {
+          await openSheet(tester, disableAnimations: true);
+
+          await tester.tap(find.byTooltip('Full screen'));
+          await tester.pump();
+
+          expect(find.byTooltip('Collapse'), findsOneWidget);
+          expect(find.byType(SeekBar), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'GIVEN the sheet '
+        'WHEN dragged to full height '
+        'THEN the episode is on top and the player controls at the bottom',
+        (tester) async {
+          await openSheet(tester);
+          await expand(tester);
+
+          expect(find.text(_args.episode.title), findsOneWidget);
+          expect(find.text(_args.podcastTitle), findsOneWidget);
+          expect(find.text('AI Companion'), findsNothing);
+          expect(find.byType(SheetHandle), findsNothing);
+          final footer = find.byType(CompanionFooter);
+          expect(
+            find.descendant(of: footer, matching: find.byType(SeekBar)),
+            findsOneWidget,
+          );
+          expect(
+            find.descendant(
+              of: footer,
+              matching: find.byType(PlayPauseCircleButton),
+            ),
+            findsOneWidget,
+          );
+          expect(find.byType(AILabelChip), findsOneWidget);
+          expect(
+            find.descendant(of: footer, matching: find.byType(AILabelChip)),
+            findsOneWidget,
+          );
+        },
+      );
+
+      testWidgets(
+        'GIVEN full height '
+        'THEN play/pause is centered and the chip sits on the left',
+        (tester) async {
+          await openSheet(tester);
+          await expand(tester);
+
+          final sheet = tester.getRect(find.byType(AICompanionSheet));
+          final play = tester.getRect(find.byType(PlayPauseCircleButton));
+          final chip = tester.getRect(find.byType(AILabelChip));
+          expect(play.center.dx, moreOrLessEquals(sheet.center.dx));
+          expect(chip.left, moreOrLessEquals(sheet.left + 16));
+        },
+      );
+
+      testWidgets(
+        'GIVEN full height '
+        'WHEN the footer play/pause is tapped '
+        'THEN adds PlayerPlayPauseToggled',
+        (tester) async {
+          await openSheet(tester);
+          await expand(tester);
+
+          await tester.tap(find.byTooltip('Pause'));
+
+          verify(
+            () => playerBloc.add(const PlayerPlayPauseToggled()),
+          ).called(1);
+        },
+      );
+
+      testWidgets(
+        'GIVEN full height '
+        'WHEN Collapse is tapped '
+        'THEN the sheet stays open at half height',
+        (tester) async {
+          await openSheet(tester);
+          await expand(tester);
+
+          await tester.tap(find.byTooltip('Collapse'));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(AICompanionSheet), findsOneWidget);
+          expect(find.byType(SheetHandle), findsOneWidget);
+          expect(find.text('AI Companion'), findsOneWidget);
+          expect(find.byType(SeekBar), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'GIVEN full height and disableAnimations '
+        'WHEN Collapse is tapped '
+        'THEN the sheet is at half height after a single frame',
+        (tester) async {
+          await openSheet(tester, disableAnimations: true);
+          await expand(tester);
+
+          await tester.tap(find.byTooltip('Collapse'));
+          await tester.pump();
+
+          expect(find.byType(SheetHandle), findsOneWidget);
+          expect(find.byType(SeekBar), findsNothing);
+        },
+      );
+    });
   });
 }

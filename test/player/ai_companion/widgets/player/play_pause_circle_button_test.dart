@@ -46,6 +46,13 @@ void main() {
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
     });
 
+    testWidgets('GIVEN the button THEN it is a 56 px circle', (tester) async {
+      await pumpButton(tester, PlayerStatus.paused);
+
+      final button = tester.widget<IconButton>(find.byType(IconButton));
+      expect(button.style!.fixedSize!.resolve({}), const Size.square(56));
+    });
+
     testWidgets(
       'GIVEN the button '
       'WHEN tapped '

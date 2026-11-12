@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:cabina/common/theme/app_theme.dart';
 import 'package:cabina/common/widgets/poster_image.dart';
 import 'package:cabina/common/widgets/status_views.dart';
+import 'package:cabina/player/ai_companion/widgets/buttons/ai_companion_button.dart';
 import 'package:cabina/player/bloc/player_bloc.dart';
 import 'package:cabina/player/models/player_args.dart';
 import 'package:cabina/player/models/player_position.dart';
@@ -161,6 +162,21 @@ void main() {
         expect(tester.widget(controlsRow.first), same(rowBefore));
         expect(tester.widget(find.byType(Slider)), isNot(same(sliderBefore)));
         expect(find.text('0:30'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'GIVEN a ready player '
+      'THEN shows the AI Companion button below the controls',
+      (tester) async {
+        await pumpPage(tester);
+
+        final button = find.byType(AICompanionButton);
+        expect(button, findsOneWidget);
+        expect(
+          tester.getTopLeft(button).dy,
+          greaterThan(tester.getBottomLeft(find.byType(PlayerControls)).dy),
+        );
       },
     );
 
