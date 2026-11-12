@@ -11,6 +11,7 @@ class Transcript extends Equatable {
     required this.source,
     required this.segments,
     required this.duration,
+    this.language,
   });
 
   final TranscriptSource source;
@@ -20,6 +21,10 @@ class Transcript extends Equatable {
   /// [TranscriptSource.rss].
   final Duration duration;
 
+  /// Language detected by the transcription provider, when it provides one.
+  /// Feed-provided subtitles do not include this metadata.
+  final String? language;
+
   @override
-  List<Object?> get props => [source, segments, duration];
+  List<Object?> get props => [source, segments, duration, language];
 }

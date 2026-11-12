@@ -78,6 +78,7 @@ class WhisperTranscriptParser {
       source: TranscriptSource.audio,
       segments: segments,
       duration: _seconds(response.duration),
+      language: response.language,
     );
   }
 

@@ -66,7 +66,7 @@ class AICompanionRepository {
   /// The summary and chapters of [transcript].
   Future<EpisodeCompanion> debrief(Transcript transcript) => _guard(
     () async => _debriefParser.parse(
-      await _openAIService.debrief(transcript.segments),
+      await _openAIService.debrief(transcript),
       transcript,
     ),
   );

@@ -97,6 +97,7 @@ final String _silentWhisper = jsonEncode({
 
 const _transcript = Transcript(
   source: TranscriptSource.audio,
+  language: 'english',
   segments: [
     TranscriptSegment(start: Duration(seconds: 4), text: 'Welcome back.'),
     TranscriptSegment(start: Duration(seconds: 8), text: 'Lighthouses.'),
@@ -162,7 +163,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(Uint8List(0));
-    registerFallbackValue(<TranscriptSegment>[]);
+    registerFallbackValue(_transcript);
   });
 
   setUp(() {
@@ -347,7 +348,7 @@ void main() {
       when(() => openAI.debrief(any())).thenAnswer((_) async => _responses);
 
       expect(await repository.debrief(_transcript), _companion);
-      verify(() => openAI.debrief(_transcript.segments)).called(1);
+      verify(() => openAI.debrief(_transcript)).called(1);
     });
   });
 }
