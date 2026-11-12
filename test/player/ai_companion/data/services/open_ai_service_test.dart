@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cabina/common/network/api_client.dart';
 import 'package:cabina/player/ai_companion/data/prompts/debrief_prompt.dart';
 import 'package:cabina/player/ai_companion/data/services/open_ai_service.dart';
+import 'package:cabina/player/ai_companion/models/transcript.dart';
 import 'package:cabina/player/ai_companion/models/transcript_segment.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -70,15 +71,25 @@ void main() {
       ).thenAnswer((_) async => '{}');
 
       expect(
-        await service.debrief(const [
-          TranscriptSegment(start: Duration(seconds: 4), text: 'Welcome.'),
-          TranscriptSegment(
-            start: Duration(seconds: 8),
-            text: '♪',
-            isMusic: true,
+        await service.debrief(
+          const Transcript(
+            source: TranscriptSource.audio,
+            language: 'english',
+            duration: Duration(seconds: 56),
+            segments: [
+              TranscriptSegment(start: Duration(seconds: 4), text: 'Welcome.'),
+              TranscriptSegment(
+                start: Duration(seconds: 8),
+                text: '♪',
+                isMusic: true,
+              ),
+              TranscriptSegment(
+                start: Duration(seconds: 40),
+                text: 'We are back.',
+              ),
+            ],
           ),
-          TranscriptSegment(start: Duration(seconds: 40), text: 'We are back.'),
-        ]),
+        ),
         '{}',
       );
 
@@ -90,10 +101,18 @@ void main() {
           timeout: const Duration(minutes: 2),
         ),
       ).captured;
+      final request = captured.single as Map<String, dynamic>;
+      expect(
+        request['instructions'],
+        allOf(
+          contains('detected the transcript language as `english`'),
+          contains('only in english'),
+        ),
+      );
       expect(captured.single, {
         'model': 'gpt-5.6-luna',
         'reasoning': {'effort': 'low'},
-        'instructions': DebriefPrompt.instructions,
+        'instructions': DebriefPrompt.instructionsFor('english'),
         'input': '[{"id":0,"text":"Welcome."},{"id":2,"text":"We are back."}]',
         'text': {
           'format': {

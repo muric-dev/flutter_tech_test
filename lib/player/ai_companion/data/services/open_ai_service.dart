@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:cabina/common/network/api_client.dart';
 import 'package:cabina/player/ai_companion/data/models/open_ai_debrief_request.dart';
 import 'package:cabina/player/ai_companion/data/prompts/debrief_prompt.dart';
-import 'package:cabina/player/ai_companion/models/transcript_segment.dart';
+import 'package:cabina/player/ai_companion/models/transcript.dart';
 
 /// The only file that knows AI Companion's provider: it transcribes audio
 /// with Whisper and asks a model for the debrief. It returns the raw JSON;
@@ -22,6 +22,7 @@ class OpenAIService {
   static final Uri _responsesUri = Uri.parse(
     'https://api.openai.com/v1/responses',
   );
+  static const String model = 'gpt-5.6-luna';
 
   /// Whisper takes about a minute for a long episode, plus the upload.
   static const transcribeTimeout = Duration(minutes: 5);
@@ -45,30 +46,28 @@ class OpenAIService {
         timeout: transcribeTimeout,
       );
 
-  /// Asks for the summary and chapters of [segments] and returns the
+  /// Asks for the summary and chapters of [transcript] and returns the
   /// Responses API body. Each spoken segment is sent as `{id, text}`, where
-  /// `id` is its index in [segments]; music segments are not sent.
-  Future<String> debrief(List<TranscriptSegment> segments) =>
-      _apiClient.postJson(
-        _responsesUri,
-        body: OpenAIDebriefRequest(
-          model: 'gpt-5.6-luna',
-          reasoning: const ResponsesReasoning(effort: ResponsesEffort.low),
-          instructions: DebriefPrompt.instructions,
-          segments: [
-            for (final (id, segment) in segments.indexed)
-              if (!segment.isMusic)
-                DebriefInputSegment(id: id, text: segment.text),
-          ],
-          text: const ResponsesText(
-            format: ResponsesJsonSchema(
-              name: 'debrief',
-              strict: true,
-              schema: DebriefPrompt.schema,
-            ),
-          ),
-        ).toJson(),
-        headers: _auth,
-        timeout: debriefTimeout,
-      );
+  /// `id` is its index in the transcript; music segments are not sent.
+  Future<String> debrief(Transcript transcript) => _apiClient.postJson(
+    _responsesUri,
+    body: OpenAIDebriefRequest(
+      model: model,
+      reasoning: const ResponsesReasoning(effort: ResponsesEffort.low),
+      instructions: DebriefPrompt.instructionsFor(transcript.language),
+      segments: [
+        for (final (id, segment) in transcript.segments.indexed)
+          if (!segment.isMusic) DebriefInputSegment(id: id, text: segment.text),
+      ],
+      text: const ResponsesText(
+        format: ResponsesJsonSchema(
+          name: 'debrief',
+          strict: true,
+          schema: DebriefPrompt.schema,
+        ),
+      ),
+    ).toJson(),
+    headers: _auth,
+    timeout: debriefTimeout,
+  );
 }

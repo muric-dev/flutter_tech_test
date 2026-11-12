@@ -28,9 +28,12 @@ Map<String, Object> _segment(
   'no_speech_prob': noSpeechProb,
 };
 
-String _response(List<Map<String, Object>> segments) => jsonEncode({
+String _response(
+  List<Map<String, Object>> segments, {
+  String? language = 'english',
+}) => jsonEncode({
   'task': 'transcribe',
-  'language': 'english',
+  'language': ?language,
   'duration': 96.0,
   'text': segments.map((s) => s['text']).join(),
   'segments': segments,
@@ -40,6 +43,20 @@ void main() {
   const parser = WhisperTranscriptParser();
 
   group('WhisperTranscriptParser', () {
+    test(
+      'GIVEN a response without a language THEN parses it with no language',
+      () {
+        final transcript = parser.parse(
+          _response([_segment(0, 0, 4, ' Welcome.')], language: null),
+        );
+
+        expect(transcript.language, isNull);
+        expect(transcript.segments, const [
+          TranscriptSegment(start: Duration.zero, text: 'Welcome.'),
+        ]);
+      },
+    );
+
     test(
       'GIVEN a 20 s silent intro, a looped hallucination, a repeated line, a '
       '30 s gap and a 24 s outro THEN keeps the spoken segments with a music '
@@ -89,6 +106,7 @@ void main() {
               ),
             ],
             duration: Duration(seconds: 96),
+            language: 'english',
           ),
         );
       },
