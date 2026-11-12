@@ -41,8 +41,10 @@ class AICompanionCubit extends Cubit<AICompanionState> {
   /// Checks [isClosed] after every stage, so a closed cubit makes no further
   /// request and saves nothing. The stage in flight finishes and is dropped,
   /// and so is its failure: a closed cubit can't emit, and nobody is left to
-  /// show the error to.
+  /// show the error to. A cubit already closed when called does nothing: an
+  /// open sheet can outlive the page that owns it.
   Future<void> _prepare() async {
+    if (isClosed) return;
     emit(state.copyWith(status: AICompanionStatus.loading, clearError: true));
     try {
       final cached = await _repository.loadCached(_args);
